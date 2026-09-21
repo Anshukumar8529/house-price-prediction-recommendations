@@ -1,140 +1,157 @@
-# 🏠 Real Estate House Price Prediction & Recommendation System
+# Real Estate Price Prediction & Recommendation Engine
 
-Production-grade Machine Learning application upgraded with a **FastAPI REST API** backend and **Streamlit** frontend interface.
+A full-stack machine learning web application that estimates real estate property valuations and provides content-based property recommendations. Built with a decoupled architecture featuring a **FastAPI** backend for ML inference and a **Streamlit** frontend for interactive analysis.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render.svg)](https://house-price-prediction-recommendations.onrender.com)
-
----
-
-## 📐 Architecture Overview
-
-```
-                          ┌───────────────────────────┐
-                          │   Streamlit Frontend UI   │
-                          │   (Home, Predict, Recs)   │
-                          └─────────────┬─────────────┘
-                                        │
-                               HTTP POST / GET (JSON)
-                                        │
-                          ┌─────────────▼─────────────┐
-                          │    FastAPI REST Backend   │
-                          │     (Uvicorn WebServer)   │
-                          └─────────────┬─────────────┘
-                                        │
-                             Pydantic Validation
-                                        │
-              ┌─────────────────────────┼─────────────────────────┐
-              │                         │                         │
-    ┌─────────▼─────────┐     ┌─────────▼─────────┐     ┌─────────▼─────────┐
-    │  Model Service    │     │  Recommendation   │     │Analytics Service  │
-    │  (pipeline.pkl)   │     │ (cosine_sim*.pkl) │     │ (data_viz1.csv)   │
-    └───────────────────┘     └───────────────────┘     └───────────────────┘
-```
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-blue?style=for-the-badge&logo=render)](https://real-estate-frontend-d8hn.onrender.com)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Swagger-green?style=for-the-badge&logo=fastapi)](https://real-estate-backend-7h1x.onrender.com/docs)
 
 ---
 
-## 📁 Project Structure
+## 📌 Project Highlights
+
+* **Decoupled Architecture**: Clean separation between machine learning microservices (FastAPI) and the user interface (Streamlit), allowing independent scaling and API integration.
+* **Price Prediction Pipeline**: Scikit-Learn regression pipeline predicting property prices based on location, area, rooms, furnishing level, and luxury metrics.
+* **Recommendation System**: Content-based filtering using precomputed Cosine Similarity matrices to recommend similar properties and location radius searches.
+* **Geospatial & Market Analytics**: Interactive visualizations including price distribution by sector, sqft rate heatmaps, and BHK breakdown using Plotly & Seaborn.
+* **Production Deployment**: Containerized with Docker and deployed to Render with automated multi-service orchestration via `render.yaml`.
+
+---
+
+## 📐 Architecture
 
 ```
-house-price-prediction/
-│
+                       ┌──────────────────────────────┐
+                       │    Streamlit Frontend UI     │
+                       │ (Home, Predict, Recs, Stats) │
+                       └──────────────┬───────────────┘
+                                      │
+                             HTTP Requests (JSON)
+                                      │
+                       ┌──────────────▼───────────────┐
+                       │     FastAPI REST Backend     │
+                       │     (ASGI / Uvicorn Server)  │
+                       └──────────────┬───────────────┘
+                                      │
+                           Pydantic Request Validation
+                                      │
+         ┌────────────────────────────┼────────────────────────────┐
+         │                            │                            │
+┌────────▼─────────┐        ┌─────────▼─────────┐        ┌─────────▼─────────┐
+│  Model Service   │        │ Recommendation Svc│        │ Analytics Service │
+│ (scikit-learn)   │        │ (cosine similarity│        │ (pandas & plotly) │
+└──────────────────┘        └───────────────────┘        └───────────────────┘
+```
+
+---
+
+## 📁 Repository Layout
+
+```text
 ├── backend/
-│   ├── __init__.py
-│   ├── main.py                  # FastAPI application & REST routes
-│   ├── schemas.py               # Pydantic request/response validation schemas
-│   ├── model_service.py         # ML pipeline loader & price prediction engine
-│   ├── recommendation_service.py # Cosine similarity & radius search engine
-│   └── analytics_service.py     # Real estate market analytics service
-│
-├── data/
-│   ├── pipeline.pkl             # Trained Scikit-Learn prediction pipeline
-│   ├── df.pkl                   # Cleaned dataset pickle for dropdown options
-│   ├── location_distance.pkl    # Location coordinate & distance matrix
-│   ├── cosine_sim1.pkl          # Cosine similarity matrix 1
-│   ├── cosine_sim2.pkl          # Cosine similarity matrix 2
-│   ├── cosine_sim3.pkl          # Cosine similarity matrix 3
-│   ├── data_viz1.csv            # Geospatial & visualization dataset
-│   └── sector_wordcloud.pkl     # Sector feature text data
+│   ├── main.py                  # FastAPI application entrypoint & routing
+│   ├── schemas.py               # Pydantic data validation schemas
+│   ├── model_service.py         # ML model loading & prediction logic
+│   ├── recommendation_service.py # Cosine similarity & location radius search
+│   └── analytics_service.py     # Aggregations & dataset summary stats
 │
 ├── pages/
-│   ├── Price Prediction.py      # Streamlit UI for price estimation
-│   ├── Recommend Apartments.py  # Streamlit UI for apartment & location recommendations
-│   └── Analytics.py             # Streamlit UI for market visualizations
+│   ├── Price_Prediction.py      # Property valuation interface
+│   ├── Recommend_Apartments.py  # Property recommendation & radius search UI
+│   └── Analytics.py             # Market analytics dashboards
 │
-├── Home.py                      # Main Streamlit entrance page
-├── requirements.txt             # Python dependencies
-├── .env.example                 # Sample environment variables
-└── README.md                    # Project documentation
+├── data/                        # Trained models, encoders & processed data
+│   ├── pipeline.pkl             # Serialized Scikit-Learn model pipeline
+│   ├── df.pkl                   # Cleaned property dataset
+│   └── cosine_sim*.pkl          # Similarity matrices
+│
+├── Home.py                      # Streamlit application entrypoint
+├── Dockerfile                   # Multi-stage production container
+├── render.yaml                  # Infrastructure-as-code for Render deployment
+└── requirements.txt             # Project dependencies
 ```
 
 ---
 
-## ⚡ Quick Start Guide
+## 🛠️ Tech Stack
 
-### 1. Install Dependencies
+* **Backend**: Python 3.10+, FastAPI, Uvicorn, Pydantic
+* **Machine Learning**: Scikit-Learn, Pandas, NumPy
+* **Frontend**: Streamlit, Plotly, Seaborn, Matplotlib, WordCloud
+* **DevOps**: Docker, Docker Compose, Render Blueprint
+
+---
+
+## 🚀 Local Development Setup
+
+### 1. Clone & Install Dependencies
 ```bash
+git clone https://github.com/Anshukumar8529/house-price-prediction-recommendations.git
+cd house-price-prediction-recommendations
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+
+# Install requirements
 pip install -r requirements.txt
 ```
 
-### 2. Launch FastAPI Backend Server
+### 2. Start Backend API
 ```bash
-uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --reload --port 8000
 ```
-- Swagger Interactive Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- ReDoc Documentation: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+* API Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-### 3. Launch Streamlit Frontend Application
+### 3. Start Frontend UI
 ```bash
 streamlit run Home.py
 ```
+* Web Application: [http://localhost:8501](http://localhost:8501)
 
 ---
 
-## 🔌 API Endpoints Summary
+## 📡 API Reference
 
-| Method | Endpoint | Description |
+| Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | Server status check |
-| `GET` | `/options` | Form dropdown options metadata |
-| `POST` | `/predict` | Estimate property price via Scikit-Learn pipeline |
-| `POST` | `/recommend` | Recommend similar properties using Cosine Similarity |
-| `POST` | `/recommend/radius` | Search locations within kilometer radius |
-| `GET` | `/analytics` | Market summary statistics |
-| `GET` | `/analytics/wordcloud/{sector}` | Fetch wordcloud text for a specific sector |
+| `/health` | `GET` | Health check endpoint |
+| `/options` | `GET` | Fetches dynamic dropdown options for UI forms |
+| `/predict` | `POST` | Calculates property price prediction |
+| `/recommend` | `POST` | Returns top N similar property recommendations |
+| `/recommend/radius` | `POST` | Performs geospatial radius search for sectors |
+| `/analytics` | `GET` | Returns aggregated market statistics |
 
----
-
-## 🧪 Testing with cURL / JSON Examples
-
-### 1. Health Check
-```bash
-curl -X GET "http://127.0.0.1:8000/health"
-```
-
-### 2. Predict Price (`POST /predict`)
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "property_type": "flat",
-       "sector": "sector 102",
-       "bedRoom": 3.0,
-       "bathroom": 2.0,
-       "balcony": "2",
-       "agePossession": "Relatively New",
-       "built_up_area": 1500.0,
-       "servant_room": 0.0,
-       "store_room": 0.0,
-       "furnishing_type": "semifurnished",
-       "luxury_category": "Medium",
-       "floor_category": "Mid Floor"
-     }'
+### Sample Prediction Request (`POST /predict`)
+```json
+{
+  "property_type": "flat",
+  "sector": "sector 102",
+  "bedRoom": 3.0,
+  "bathroom": 2.0,
+  "balcony": "2",
+  "agePossession": "Relatively New",
+  "built_up_area": 1500.0,
+  "servant_room": 0.0,
+  "store_room": 0.0,
+  "furnishing_type": "semifurnished",
+  "luxury_category": "Medium",
+  "floor_category": "Mid Floor"
+}
 ```
 
 ---
 
-## 🎓 Technology Stack
+## 🐳 Docker Execution
 
-- **Backend**: FastAPI, Pydantic, Uvicorn, Python 3.12
-- **Machine Learning**: Scikit-learn, Pandas, NumPy, Pickle
-- **Frontend**: Streamlit, Plotly, Seaborn, Matplotlib, WordCloud
+Run the complete multi-service application with Docker Compose:
+
+```bash
+docker-compose up -d --build
+```
+
+---
+
+## 👤 Author
+
+**Anshu Kumar**
+- GitHub: [@Anshukumar8529](https://github.com/Anshukumar8529)
