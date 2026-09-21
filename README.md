@@ -2,6 +2,8 @@
 
 Production-grade Machine Learning application upgraded with a **FastAPI REST API** backend and **Streamlit** frontend interface.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render.svg)](https://house-price-prediction-recommendations.onrender.com)
+
 ---
 
 ## 📐 Architecture Overview
