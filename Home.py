@@ -312,8 +312,8 @@ with st.sidebar:
     st.markdown('<div class="sidebar-caption">INTELLIGENCE PLATFORM</div>', unsafe_allow_html=True)
     st.markdown("---")
     st.page_link("Home.py", label="Home", icon="🏠")
-    st.page_link("pages/Price Prediction.py", label="Price Prediction", icon="📈")
-    st.page_link("pages/Recommend Apartments.py", label="Property Discovery", icon="🏢")
+    st.page_link("pages/Price_Prediction.py", label="Price Prediction", icon="📈")
+    st.page_link("pages/Recommend_Apartments.py", label="Property Discovery", icon="🏢")
     st.page_link("pages/Analytics.py", label="Market Analytics", icon="📊")
     st.markdown("---")
     st.caption("ML-Powered Property Intelligence")
@@ -368,9 +368,9 @@ with hero_left:
 
     cta_col1, cta_col2, cta_spacer = st.columns([1.2, 1.2, 1])
     with cta_col1:
-        st.page_link("pages/Price Prediction.py", label="Predict Property Price", use_container_width=True)
+        st.page_link("pages/Price_Prediction.py", label="Predict Property Price", use_container_width=True)
     with cta_col2:
-        st.page_link("pages/Recommend Apartments.py", label="Explore Properties", use_container_width=True)
+        st.page_link("pages/Recommend_Apartments.py", label="Explore Properties", use_container_width=True)
 
 with hero_right:
     st.markdown("""
@@ -430,7 +430,7 @@ with p1:
         <div class="panel-desc">Estimate the market value of any property based on location, area, rooms, furnishing, and luxury attributes.</div>
     </div>
     """, unsafe_allow_html=True)
-    st.page_link("pages/Price Prediction.py", label="Predict Price →", use_container_width=True)
+    st.page_link("pages/Price_Prediction.py", label="Predict Price →", use_container_width=True)
 
 with p2:
     st.markdown("""
@@ -440,7 +440,7 @@ with p2:
         <div class="panel-desc">Find properties that match your preferences using weighted cosine similarity recommendation algorithms.</div>
     </div>
     """, unsafe_allow_html=True)
-    st.page_link("pages/Recommend Apartments.py", label="Explore Properties →", use_container_width=True)
+    st.page_link("pages/Recommend_Apartments.py", label="Explore Properties →", use_container_width=True)
 
 with p3:
     st.markdown("""
@@ -539,7 +539,7 @@ try:
                 <div class="listing-price">₹ {r['price']:.2f} Cr</div>
             </div>
             """, unsafe_allow_html=True)
-            st.page_link("pages/Recommend Apartments.py", label="View Property →", use_container_width=True)
+            st.page_link("pages/Recommend_Apartments.py", label="View Property →", use_container_width=True)
 except Exception:
     pass
 
