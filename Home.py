@@ -4,7 +4,11 @@ import requests
 import pandas as pd
 import plotly.express as px
 
-API_URL = os.getenv("API_URL", os.getenv("BACKEND_URL", "http://127.0.0.1:8000")).rstrip("/")
+_raw_api_url = os.getenv("API_URL", os.getenv("BACKEND_URL", "http://127.0.0.1:8000")).rstrip("/")
+if not _raw_api_url.startswith("http://") and not _raw_api_url.startswith("https://"):
+    API_URL = f"http://{_raw_api_url}"
+else:
+    API_URL = _raw_api_url
 
 st.set_page_config(
     page_title="Real Estate Intelligence Platform",
