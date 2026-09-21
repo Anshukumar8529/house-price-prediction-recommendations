@@ -1,0 +1,25 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: real-estate-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+
+  # Streamlit Frontend Service
+  - type: web
+    name: real-estate-frontend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run Home.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: API_URL
+        fromService:
+          type: web
+          name: real-estate-backend
+          property: host

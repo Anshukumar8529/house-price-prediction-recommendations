@@ -1,111 +1,108 @@
+import os
 import streamlit as st
-import pickle
+import requests
 import pandas as pd
-import numpy as np
 
-st.set_page_config(page_title="Recommend Apartments")
+API_URL = os.getenv("API_URL", os.getenv("BACKEND_URL", "http://127.0.0.1:8000")).rstrip("/")
 
-# Load recommendation data
-with open("data/location_distance.pkl", "rb") as file:
-    location_df = pickle.load(file)
+st.set_page_config(page_title="Recommend Apartments", page_icon="🏢")
 
-with open("data/cosine_sim1.pkl", "rb") as file:
-    cosine_sim1 = pickle.load(file)
-
-with open("data/cosine_sim2.pkl", "rb") as file:
-    cosine_sim2 = pickle.load(file)
-
-with open("data/cosine_sim3.pkl", "rb") as file:
-    cosine_sim3 = pickle.load(file)
+st.title("🏢 Property & Location Recommender")
+st.markdown("*(Powered by FastAPI Backend & Cosine Similarity Matrix)*")
 
 
-def recommend_properties_with_scores(property_name, top_n=5):
+@st.cache_data(ttl=600)
+def get_options():
+    try:
+        res = requests.get(f"{API_URL}/options", timeout=5)
+        if res.status_code == 200:
+            return res.json()
+    except Exception:
+        st.error(f"⚠️ Could not connect to FastAPI server at `{API_URL}`. Please start uvicorn backend.")
+        st.info("Run: `uvicorn backend.main:app --reload`")
+        return None
+    return None
 
-    cosine_sim_matrix = (
-        30 * cosine_sim1
-        + 20 * cosine_sim2
-        + 8 * cosine_sim3
+options = get_options()
+
+if options is None:
+    st.stop()
+
+# ---------------------------------------------------------------------------
+# 1. Location and Radius Search Section
+# ---------------------------------------------------------------------------
+st.header("1. Search Locations within Radius")
+
+col1, col2 = st.columns(2)
+with col1:
+    selected_location = st.selectbox(
+        "Select Target Location/Sector",
+        options.get("locations", [])
+    )
+with col2:
+    radius = st.number_input(
+        "Radius in kms",
+        min_value=0.1,
+        value=5.0,
+        step=0.5
     )
 
-    sim_scores = list(
-        enumerate(
-            cosine_sim_matrix[
-                location_df.index.get_loc(property_name)
-            ]
-        )
-    )
+if st.button("Search Radius"):
+    payload = {
+        "location": selected_location,
+        "radius_km": float(radius)
+    }
 
-    sorted_scores = sorted(
-        sim_scores,
-        key=lambda x: x[1],
-        reverse=True
-    )
-
-    top_indices = [
-        i[0]
-        for i in sorted_scores[1:top_n + 1]
-    ]
-
-    top_scores = [
-        i[1]
-        for i in sorted_scores[1:top_n + 1]
-    ]
-
-    top_properties = location_df.index[
-        top_indices
-    ].tolist()
-
-    recommendations_df = pd.DataFrame({
-        "PropertyName": top_properties,
-        "SimilarityScore": top_scores
-    })
-
-    return recommendations_df
+    with st.spinner("Fetching nearby locations from FastAPI (`POST /recommend/radius`)..."):
+        try:
+            res = requests.post(f"{API_URL}/recommend/radius", json=payload, timeout=10)
+            if res.status_code == 200:
+                data = res.json().get("results", [])
+                if data:
+                    res_df = pd.DataFrame(data)
+                    res_df.columns = ["Location / Sector", "Distance (km)"]
+                    st.dataframe(res_df, use_container_width=True)
+                else:
+                    st.info("No nearby locations found within this radius.")
+            else:
+                st.error(f"API Error ({res.status_code}): {res.json().get('message', res.text)}")
+        except Exception as e:
+            st.error(f"Failed to communicate with FastAPI API: {str(e)}")
 
 
-# Location and Radius Search
-st.title("Select Location and Radius")
+st.divider()
 
-selected_location = st.selectbox(
-    "Select Location",
-    sorted(location_df.columns.to_list())
-)
-
-radius = st.number_input(
-    "Radius in kms",
-    min_value=0.0
-)
-
-if st.button("Search"):
-
-    result_ser = (
-        location_df[
-            location_df[selected_location] < radius * 1000
-        ][selected_location]
-        .sort_values()
-    )
-
-    for key, value in result_ser.items():
-        st.write(
-            f"{key} : {value / 1000:.2f} kms"
-        )
-
-
-# Apartment Recommendation
-st.title("Recommend Apartments")
+# ---------------------------------------------------------------------------
+# 2. Apartment Recommendation Section
+# ---------------------------------------------------------------------------
+st.header("2. Recommend Similar Apartments")
 
 selected_apartment = st.selectbox(
     "Select an Apartment",
-    sorted(location_df.index.to_list())
+    options.get("apartment_names", [])
 )
 
-if st.button("Recommend"):
+top_n = st.slider("Number of Recommendations", min_value=1, max_value=15, value=5)
 
-    recommendation_df = recommend_properties_with_scores(
-        selected_apartment
-    )
+if st.button("Get Recommendations", type="primary"):
+    payload = {
+        "property_name": selected_apartment,
+        "top_n": top_n
+    }
 
-    st.dataframe(
-        recommendation_df,
-        use_container_width=True
-    )
+    with st.spinner("Calculating recommendations via FastAPI (`POST /recommend`)..."):
+        try:
+            res = requests.post(f"{API_URL}/recommend", json=payload, timeout=10)
+            if res.status_code == 200:
+                recs = res.json().get("recommendations", [])
+                if recs:
+                    rec_df = pd.DataFrame(recs)
+                    rec_df.columns = ["Recommended Property", "Similarity Score"]
+                    st.success(f"Top {len(recs)} recommended properties for **{selected_apartment}**:")
+                    st.dataframe(rec_df, use_container_width=True)
+                else:
+                    st.warning("No recommendations returned.")
+            else:
+                st.error(f"API Error ({res.status_code}): {res.json().get('message', res.text)}")
+        except Exception as e:
+            st.error(f"Failed to fetch recommendations: {str(e)}")

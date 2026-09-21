@@ -1,0 +1,19 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Streamlit application code and assets
+COPY Home.py .
+COPY pages/ ./pages/
+COPY data/ ./data/
+
+# Environment variables
+ENV PORT=8501
+EXPOSE 8501
+
+# Start Streamlit application
+CMD ["sh", "-c", "streamlit run Home.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false"]
